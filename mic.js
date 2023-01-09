@@ -46,9 +46,12 @@ async function init() {
  * instead of from HTML.
  */
 async function initializeUiValues() {
-  const { wakeWord, sensitivity, searchLanguage } =
+  const { accessKey, wakeWord, sensitivity, searchLanguage } =
     await getOptionsFromStorage();
 
+  if (accessKey !== undefined) {
+    document.getElementById("input-access-key").value = accessKey;
+  }
   document.getElementById("select-wake-word").value = wakeWord;
   document.getElementById("input-sensitivity").value = sensitivity;
   document.getElementById("select-search-language").value = searchLanguage;
@@ -59,6 +62,9 @@ async function initializeUiValues() {
  * give them defaults and set them.
  */
 async function getOptionsFromStorage() {
+  const data0 = await browser.storage.local.get("accessKey");
+  let accessKey = data0.accessKey;
+
   const data1 = await browser.storage.local.get("wakeWord");
   let wakeWord;
 
@@ -89,10 +95,15 @@ async function getOptionsFromStorage() {
     searchLanguage = data3.searchLanguage;
   }
 
-  return { wakeWord, sensitivity, searchLanguage };
+  return { accessKey, wakeWord, sensitivity, searchLanguage };
 }
 
 // Options
+document.getElementById("input-access-key").onchange = async (event) => {
+  const newAccessKey = event.target.value;
+  await browser.storage.local.set({ accessKey: newAccessKey });
+  await startPorcupine();
+};
 document.getElementById("select-wake-word").onchange = async (event) => {
   const newWakeWord = event.target.value;
   await browser.storage.local.set({ wakeWord: newWakeWord });
@@ -151,8 +162,9 @@ function sleep(ms) {
 let ppnWorker = null, webVp = null;
 
 async function startPorcupine() {
-  const { wakeWord, sensitivity, searchLanguage } =
+  const { accessKey, wakeWord, sensitivity, searchLanguage } =
     await getOptionsFromStorage();
+
   const sensitivityNormalized = sensitivity / 100.0;
 
   setPpnStatus("init");
@@ -169,7 +181,7 @@ async function startPorcupine() {
 
   try {
     ppnWorker = await PorcupineWorkerFactory.create(
-      ACCESS_KEY,
+      accessKey,
       {
         custom: wakeWord,
         sensitivity: sensitivityNormalized,
