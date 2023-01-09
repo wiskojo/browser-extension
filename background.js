@@ -1,6 +1,6 @@
 import { browser } from "webextension-polyfill-ts";
 
-const GOOGLE_SEARCH_QUERY_URL = "http://google.com/search?q=";
+const CHATGPT_QUERY_URL = "https://chat.openai.com/chat";
 
 let micTabId = -1;
 let extensionState = "init";
@@ -96,17 +96,11 @@ browser.runtime.onMessage.addListener(async (request) => {
       messageActiveTab("[Say your search query]");
       break;
     case "wsr-onend":
-      // If the user said something, open a Google search tab with their query
+      // If the user said something, open a ChatGPT chat tab with their query
       if (request.transcript !== undefined) {
-        messageActiveTab(request.transcript.trim());
-        const encodedQueryParams = encodeURIComponent(
-          request.transcript.trim()
-        );
-        browser.tabs.create({
-          url: `${GOOGLE_SEARCH_QUERY_URL}${encodedQueryParams}`,
-        });
+        getOrCreateChatGptTabAndQuery(request.transcript);
+        // TODO: replace the shit
       }
-
       // Back to idle state
       await setExtensionState("on");
       break;
@@ -194,6 +188,49 @@ async function getOrCreateMicTab() {
 
     micTabId = micTab.id;
   }
+}
+
+async function getOrCreateChatGptTabAndQuery(query) {
+  let chatGptTabId;
+
+  const extantChatGptTabs = await browser.tabs.query({
+    url: `${CHATGPT_QUERY_URL}/*`
+  })
+  if (extantChatGptTabs.length === 0) {
+    const chatGptTab = await browser.tabs.create({
+      url: CHATGPT_QUERY_URL,
+      active: true,
+    });
+    chatGptTabId = chatGptTab.id;
+  } else {
+    chatGptTabId = extantChatGptTabs[0].id;
+    await browser.tabs.update(
+      chatGptTabId,
+      {
+        url: CHATGPT_QUERY_URL,
+        active: true,
+      }
+    )
+  }
+  
+  browser.tabs.onUpdated.addListener(function onUpdated(tabId, info) {
+    if (tabId === chatGptTabId && info.status === 'complete') {
+      browser.tabs.onUpdated.removeListener(onUpdated);
+      browser.scripting.executeScript({
+        target: {tabId: chatGptTabId},
+        func: (query) => {
+          const form = document.getElementsByTagName('form')[0];
+          if (form) {
+            const textarea = form.getElementsByTagName('textarea')[0];
+            const button = form.getElementsByTagName('button')[0];
+            textarea.value = query;
+            button.click();
+          }
+        },
+        args: [query]
+      });
+    }
+  });
 }
 
 const init = async () => {

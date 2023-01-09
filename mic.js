@@ -4,7 +4,6 @@ import { browser } from "webextension-polyfill-ts";
 
 import { GOOGLE_SEARCH_LANGUAGES } from "./google_search_languages.js";
 import {
-  ACCESS_KEY,
   HEY_CHATGPT
 } from "./constants.js";
 
