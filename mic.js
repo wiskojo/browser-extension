@@ -1,14 +1,10 @@
-import { PorcupineWorkerFactory } from "@picovoice/porcupine-web-en-worker";
+import { BuiltInKeyword, PorcupineWorkerFactory } from "@picovoice/porcupine-web-en-worker";
 import { WebVoiceProcessor } from "@picovoice/web-voice-processor";
 import { browser } from "webextension-polyfill-ts";
 
 import { GOOGLE_SEARCH_LANGUAGES } from "./google_search_languages.js";
 import {
   ACCESS_KEY,
-  OK_GOOGLE,
-  HEY_GOOGLE,
-  PICOVOICE,
-  PORCUPINE
 } from "./constants.js";
 
 for (const [language, value] of Object.entries(GOOGLE_SEARCH_LANGUAGES)) {
@@ -32,10 +28,6 @@ const STRINGS_READY = "Porcupine is ready and listening for the wake word.";
 const STRINGS_INITIALIZING = "Initializing Porcupine...";
 
 const KEYWORD_MAP = {
-  "Ok Google": OK_GOOGLE,
-  "Hey Google": HEY_GOOGLE,
-  "Picovoice": PICOVOICE,
-  "Porcupine": PORCUPINE
 }
 
 const chime = new Audio(browser.runtime.getURL("audio/click.ogg"));
@@ -176,11 +168,12 @@ async function startPorcupine() {
   try {
     ppnWorker = await PorcupineWorkerFactory.create(
       ACCESS_KEY,
-      {
-        custom: wakeWord,
-        sensitivity: sensitivityNormalized,
-        base64: KEYWORD_MAP[wakeWord]
-      }
+      BuiltInKeyword.Porcupine
+      // {
+      //   custom: wakeWord,
+      //   sensitivity: sensitivityNormalized,
+      //   base64: KEYWORD_MAP[wakeWord]
+      // }
     );
   } catch (error) {
     setPpnStatus("error", error);
