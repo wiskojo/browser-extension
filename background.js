@@ -98,8 +98,11 @@ browser.runtime.onMessage.addListener(async (request) => {
     case "wsr-onend":
       // If the user said something, open a ChatGPT chat tab with their query
       if (request.transcript !== undefined) {
-        getOrCreateChatGptTabAndQuery(request.transcript);
-        // TODO: replace the shit
+        let context = await getHighlightedContext();
+        if (context !== '') {
+          context = context + '\n\n'
+        }
+        getOrCreateChatGptTabAndQuery(context + request.transcript);
       }
       // Back to idle state
       await setExtensionState("on");
@@ -188,6 +191,24 @@ async function getOrCreateMicTab() {
 
     micTabId = micTab.id;
   }
+}
+
+async function getHighlightedContext() {
+  const tabs = await browser.tabs.query({active: true, currentWindow: true});
+  const activeTab = tabs[0];
+
+  if (activeTab.url?.startsWith("chrome-extension://")) {
+    return '';
+  }
+
+  const context = await browser.scripting.executeScript({
+    target: {tabId: activeTab.id},
+    func: (query) => {
+      return window.getSelection().toString();
+    },
+  });
+
+  return context[0]['result'];
 }
 
 async function getOrCreateChatGptTabAndQuery(query) {
