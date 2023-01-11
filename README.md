@@ -1,10 +1,10 @@
-# Voice AI Browser Extension for Google Chrome
+# ChatGPT Wake Word Voice Assistant Browser Extension for Google Chrome
 
-This is the source code for building the Voice AI Browser Extension for Google Chrome. The extension allows you to use Picovoice Porcupine to listen for a wake word, and then uses the SpeechRecogniton API to perform a Google Search via voice.
+This is the source code for building the ChatGPT Wake Word Voice Assistant Browser Extension for Google Chrome. It uses Picovoice Porcupine for wake word detection + SpeechRecognitionAPI to perform a query to ChatGPT via voice.
 
-The extension serves as small but useful tool for performing voice searches with a wake word. The extension source code provides a fully functional proof-of-concept implementation of Picovoice's WASM-powered offline Voice AI used with the `WebExtension` API.
+This is a very simple POC extended from Picovoice's [`browser-extension`](https://github.com/Picovoice/browser-extension).
 
-The extension use [`webextension-polyfill`](https://github.com/Lusito/webextension-polyfill-ts) via so that all of the `WebExtension` APIs are promise-based in Chrome, instead of callback-based.
+You will need your own Picovoice AccessKey which can be acquired at the [`Picovoice console`](https://console.picovoice.ai/).
 
 ## Compatibility
 
